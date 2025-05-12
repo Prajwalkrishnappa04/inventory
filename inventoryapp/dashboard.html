@@ -1,0 +1,60 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store Dashboard</title>
+    <link rel="stylesheet" href="{% static 'inventoryapp/styles.css' %}">
+</head>
+<body>
+    <h1>Store Dashboard</h1>
+
+    <h2>Add Item</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ item_form.as_p }}
+        <button type="submit">Add Item</button>
+    </form>
+
+    <h2>Create Purchase</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ purchase_form.as_p }}
+        {{ purchase_formset.management_form }}
+        {% for form in purchase_formset %}
+            {{ form.as_p }}
+        {% endfor %}
+        <button type="submit">Submit Purchase</button>
+    </form>
+
+    <h2>Purchase History</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Date</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in purchases %}
+            <tr>
+                <td>{{ row.purchase.customer.name }}</td>
+                <td>{{ row.item.name }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.purchase.date }}</td>
+                <td>
+                    <form method="post" action="{% url 'delete_purchase_item' row.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

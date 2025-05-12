@@ -1,0 +1,323 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store Dashboard</title>
+    <link rel="stylesheet" href="{% static 'inventoryapp/styles.css' %}">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            background-color: #eaf2f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        form button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        form button:hover {
+            background-color: #2980b9;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px 10px;
+            margin: 10px 0 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+
+        td form {
+            margin: 0;
+        }
+
+        td form button {
+            background-color: #e74c3c;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        td form button:hover {
+            background-color: #c0392b;
+        }
+
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .product-card {
+            width: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            background: #fff;
+            box-shadow: 2px 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .product-card button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .product-card button:hover {
+            background-color: #1e8449;
+        }
+
+        #cart-box {
+            margin-top: 40px;
+            padding: 20px;
+            border: 2px dashed #aaa;
+            background-color: #fdfefe;
+            border-radius: 10px;
+        }
+
+        #cart-box table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #cart-box th, #cart-box td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Online Stores</h1>
+
+        <h2>Available Items</h2>
+        <div class="product-grid">
+            {% for item in items %}
+            <div class="product-card">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                {% else %}
+                    <img src="{% static 'inventoryapp/placeholder.png' %}" alt="No Image">
+                {% endif %}
+                <h3>{{ item.name }}</h3>
+                <p>Price: ₹{{ item.price }}</p>
+                <p>Stock: {{ item.stock }}</p>
+                <button onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">Add to Cart</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Your Cart</h2>
+        <div id="cart-box">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items">
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Create Purchase</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ purchase_form.as_p }}
+            {{ purchase_formset.management_form }}
+            {% for form in purchase_formset %}
+                {{ form.as_p }}
+            {% endfor %}
+            <button type="submit">Submit Purchase</button>
+        </form>
+
+        <h2>Purchase History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Date</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in purchases %}
+                <tr>
+                    <td>{{ row.purchase.customer.name }}</td>
+                    <td>{{ row.item.name }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>{{ row.purchase.date }}</td>
+                    <td>
+                        <form method="post" action="{% url 'delete_purchase_item' row.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+       const cart = {};
+
+function addToCart(id, name, price) {
+    if (cart[id]) {
+        cart[id].quantity += 1;
+    } else {
+        cart[id] = { id, name, price, quantity: 1 };
+    }
+    renderCart();
+}
+
+function removeFromCart(id) {
+    if (cart[id]) {
+        cart[id].quantity -= 1;
+        if (cart[id].quantity <= 0) {
+            delete cart[id];
+        }
+    }
+    renderCart();
+}
+
+function renderCart() {
+    const tbody = document.getElementById('cart-items');
+    tbody.innerHTML = '';
+    
+    let totalPrice = 0;
+    Object.values(cart).forEach((item) => {
+        const totalItemPrice = item.price * item.quantity;
+        totalPrice += totalItemPrice;
+        
+        const row = `
+            <tr>
+                <td>${item.name}</td>
+                <td>₹${item.price}</td>
+                <td>
+                    <button onclick="removeFromCart(${item.id})">-</button>
+                    ${item.quantity}
+                    <button onclick="addToCart(${item.id}, '${item.name}', ${item.price})">+</button>
+                </td>
+                <td>₹${totalItemPrice}</td>
+                <td>
+                    <button onclick="deleteItemCompletely(${item.id})">Remove</button>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+
+    // Add total price row if cart is not empty
+    if (Object.keys(cart).length > 0) {
+        const totalRow = `
+            <tr>
+                <td colspan="3"><strong>Total</strong></td>
+                <td><strong>₹${totalPrice}</strong></td>
+                <td></td>
+            </tr>
+        `;
+        tbody.innerHTML += totalRow;
+    }
+}
+
+function deleteItemCompletely(id) {
+    delete cart[id];
+    renderCart();
+}
+
+// Modify the table header to match the new structure
+document.addEventListener('DOMContentLoaded', () => {
+    const thead = document.querySelector('#cart-box thead tr');
+    if (thead) {
+        thead.innerHTML = `
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Actions</th>
+        `;
+    }
+});
+    </script>
+</body>
+</html>

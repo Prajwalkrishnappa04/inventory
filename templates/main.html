@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Store Dashboard</title>
+  <link rel="stylesheet" href="{% static 'inventory/styles.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Store Dashboard</h1>
+  </header>
+
+  <main>
+    <!-- Add Item Section -->
+    <section>
+      <h2>Add Item</h2>
+      <form method="post" action="{% url 'add_item' %}">
+        {% csrf_token %}
+        {{ item_form.as_p }}
+        <button type="submit">Add Item</button>
+      </form>
+    </section>
+
+    <!-- Add Purchase Section -->
+    <section>
+      <h2>Create Purchase</h2>
+      <form method="post" action="{% url 'add_purchase' %}">
+        {% csrf_token %}
+        {{ purchase_form.customer_name.label }}: {{ purchase_form.customer_name }}
+        {{ purchase_form.customer_address.label }}: {{ purchase_form.customer_address }}<br><br>
+
+        <h3>Items:</h3>
+        {% for subform in purchase_formset %}
+          {{ subform.item.label }}: {{ subform.item }}
+          {{ subform.quantity.label }}: {{ subform.quantity }}<br><br>
+        {% endfor %}
+        <button type="submit">Submit Purchase</button>
+      </form>
+    </section>
+
+    <!-- Purchase List Section -->
+    <section>
+      <h2>Purchase History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in purchases %}
+          <tr>
+            <td>{{ row.purchase.customer.name }}</td>
+            <td>{{ row.item.name }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>{{ row.purchase.date }}</td>
+            <td>
+              <form method="post" action="{% url 'delete_purchase_item' row.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
